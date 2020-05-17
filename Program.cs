@@ -26,8 +26,14 @@ namespace Mario64TextureRenamer {
                 rawDataFiles.AddRange(files);
             }
 
+            bool isWindows = Environment.OSVersion.Platform.ToString().ToLower().Contains("win");
             foreach (String imageName in images) {
-                int index = imageName.LastIndexOf("\\");
+                int index;
+                if (isWindows) {
+                    index = imageName.LastIndexOf("\\");
+                } else {
+                    index = imageName.LastIndexOf("/");
+                }
                 String sub = imageName.Substring(index + 1, imageName.Length - 5 - index);
                 foreach (String rawFileName in rawDataFiles) {
                     if (rawFileName.Contains(sub)) {
@@ -36,7 +42,6 @@ namespace Mario64TextureRenamer {
                         Console.WriteLine("Found one - " + sub + " crc " + getHex((int)result, 8) + rawFileName);
                         byte[] imageData = File.ReadAllBytes(imageName);
                         File.WriteAllBytes(args[2] + getHex((int)result, 8) + ".png", imageData);
-//                        File.WriteAllBytes(imageName.Replace("textures_pngs", "textures_out_combined").Replace(sub, getHex((int)result, 8)), imageData);
                     }
                 }
             }
