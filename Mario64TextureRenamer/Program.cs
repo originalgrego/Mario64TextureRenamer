@@ -100,8 +100,6 @@ namespace Mario64TextureRenamer {
             } else if ("applySplitCfg".Equals(args[0])) {
                 applySplitConfig(args);
             }
-
-            Console.ReadKey();
         }
 
         private static void applySplitConfig(string[] args) {
@@ -110,7 +108,7 @@ namespace Mario64TextureRenamer {
             String configData = File.ReadAllText(args[2]);
             String[] configLines = configData.Split(new[] { "\r\n" }, StringSplitOptions.None);
             foreach (String configLine in configLines) {
-                if (configLine == "" ) {
+                if (configLine != "" ) {
                     Bitmap result = new Bitmap(256, 256);
                     String[] config = configLine.Split(new[] { "," }, StringSplitOptions.None);
                     if (config.Length == 3) {
