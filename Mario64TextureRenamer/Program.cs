@@ -69,12 +69,20 @@ namespace Mario64TextureRenamer {
                 Bitmap splitImage = splitFiles[index];
 
                 bool handled = false;
-                for (int x = 0; !handled && x < 216; x ++) {
-                    for (int y = 0; !handled && y < 216; y++) {
+                for (int x = 0; !handled && x < fullImage.Width; x ++) {
+                    for (int y = 0; !handled && y < fullImage.Height; y++) {
                         bool found = true;
-                        for (int dx = 0; found && dx < 32; dx ++) {
-                            for (int dy = 0; found && dy < 32; dy++) {
-                                found = fullImage.GetPixel(x + dx, y + dy) == splitImage.GetPixel(dx, dy);
+                        for (int dx = 0; found && dx < splitImage.Width; dx ++) {
+                            for (int dy = 0; found && dy < splitImage.Height; dy++) {
+                                int imageX = x + dx;
+                                if (imageX >= fullImage.Width) {
+                                    imageX -= fullImage.Width;
+                                }
+                                int imageY = y + dy;
+                                if (imageY >= fullImage.Height) {
+                                    imageY -= fullImage.Height;
+                                }
+                                found = fullImage.GetPixel(imageX, imageY) == splitImage.GetPixel(dx, dy);
                             }
                         }
 
@@ -99,24 +107,65 @@ namespace Mario64TextureRenamer {
                 generateSplitConfig(args);
             } else if ("applySplitCfg".Equals(args[0])) {
                 applySplitConfig(args);
+            } else if ("recreateFromCfg".Equals(args[0])) {
+                recreateImageFromConfig(args);
             }
         }
 
-        private static void applySplitConfig(string[] args) {
+        private static void recreateImageFromConfig(string[] args) {
             Bitmap fullImage = new Bitmap(args[1]);
+            Bitmap result = new Bitmap(fullImage.Width, fullImage.Height);
 
+            String splitDir = args[2].Substring(0, args[2].LastIndexOf("\\") + 1);
             String configData = File.ReadAllText(args[2]);
             String[] configLines = configData.Split(new[] { "\r\n" }, StringSplitOptions.None);
             foreach (String configLine in configLines) {
-                if (configLine != "" ) {
-                    Bitmap result = new Bitmap(256, 256);
+                if (configLine != "") {
                     String[] config = configLine.Split(new[] { "," }, StringSplitOptions.None);
+                    Bitmap splitImage = new Bitmap(splitDir + config[0]);
                     if (config.Length == 3) {
                         int xStart = int.Parse(config[1]) * 8;
                         int yStart = int.Parse(config[2]) * 8;
-                        for (int x = 0; x < 256; x++) {
-                            for (int y = 0; y < 256; y++) {
-                                result.SetPixel(x, y, fullImage.GetPixel(xStart + x, yStart + y));
+                        for (int x = 0; x < splitImage.Width; x++) {
+                            for (int y = 0; y < splitImage.Height; y++) {
+                                result.SetPixel(xStart +  x, yStart + y, splitImage.GetPixel(x, y));
+                            }
+                        }
+                    }
+                }
+            }
+
+            result.Save("result.png");
+        }
+
+        private static void applySplitConfig(string[] args) {
+            int originalSplitWidth = int.Parse(args[1]);
+            int originalSplitHeight = int.Parse(args[2]);
+
+            int newScale = int.Parse(args[3]);
+
+            Bitmap fullImage = new Bitmap(args[4]);
+
+            String configData = File.ReadAllText(args[5]);
+            String[] configLines = configData.Split(new[] { "\r\n" }, StringSplitOptions.None);
+            foreach (String configLine in configLines) {
+                if (configLine != "" ) {
+                    Bitmap result = new Bitmap(originalSplitWidth * newScale, originalSplitHeight * newScale);
+                    String[] config = configLine.Split(new[] { "," }, StringSplitOptions.None);
+                    if (config.Length == 3) {
+                        int xStart = int.Parse(config[1]) * newScale;
+                        int yStart = int.Parse(config[2]) * newScale;
+                        for (int x = 0; x < result.Width; x++) {
+                            for (int y = 0; y < result.Height; y++) {
+                                int imageX = xStart + x;
+                                if (imageX >= fullImage.Width) {
+                                    imageX -= fullImage.Width;
+                                }
+                                int imageY = yStart + y;
+                                if (imageY >= fullImage.Height) {
+                                    imageY -= fullImage.Height;
+                                }
+                                result.SetPixel(x, y, fullImage.GetPixel(imageX, imageY));
                             }
                         }
 
